@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/home/artus/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/16.0.1/5fa98cd1a63c99a44dd8d3b77e4762b066a5d0c5/guava-16.0.1.jar"
+        jumboMode="false"
+        revision="24.0.1"
+        sha1="5fa98cd1a63c99a44dd8d3b77e4762b066a5d0c5">
+        <dex dex="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/pre-dexed/debug/guava-16.0.1_46baa8fb2e364c8c1576ae0776873b70b7c7d85e.jar" />
+    </item>
+    <item
+        jar="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/24.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="24.0.1"
+        sha1="c936c1bd42f0c018c18920c7bec619ef056b24f8">
+        <dex dex="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/pre-dexed/debug/com.android.support-animated-vector-drawable-24.1.1_53a6cde397552285a8d4fb708413c78bd24eafbf.jar" />
+    </item>
+    <item
+        jar="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/exploded-aar/com.android.support/support-v4/24.1.1/jars/libs/internal_impl-24.1.1.jar"
+        jumboMode="false"
+        revision="24.0.1"
+        sha1="f78c2f395cb096f9dc1dc07e729922b8fcd3c4f5">
+        <dex dex="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/pre-dexed/debug/internal_impl-24.1.1_29ca19803f0fcabcaa8ffd9e7f4c71696a34e9d1.jar" />
+    </item>
+    <item
+        jar="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/24.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="24.0.1"
+        sha1="f62e763609f65e47dc6c498760a4accf02776788">
+        <dex dex="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/pre-dexed/debug/com.android.support-support-vector-drawable-24.1.1_2310e26b54956d0023355ee45952fd9f8849aafb.jar" />
+    </item>
+    <item
+        jar="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/exploded-aar/com.android.support/support-v4/24.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="24.0.1"
+        sha1="6d7d803871e3203465f71a163e7af104f807b446">
+        <dex dex="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/pre-dexed/debug/com.android.support-support-v4-24.1.1_4be11d9ccb510dcff007f2a08c17618769f70f36.jar" />
+    </item>
+    <item
+        jar="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/24.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="24.0.1"
+        sha1="1256c10604bb098490eab070d76754ac5ceab35c">
+        <dex dex="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/pre-dexed/debug/com.android.support-appcompat-v7-24.1.1_8e4c23abd8dbab617141baad6185b9c6700e1fc0.jar" />
+    </item>
+    <item
+        jar="/home/artus/.gradle/caches/modules-2/files-2.1/com.android.support/support-annotations/24.1.1/3af19f153122737b372622fa6c81dd11a1c6b999/support-annotations-24.1.1.jar"
+        jumboMode="false"
+        revision="24.0.1"
+        sha1="3af19f153122737b372622fa6c81dd11a1c6b999">
+        <dex dex="/home/artus/Workspaces/BLE_imeddiate/app/build/intermediates/pre-dexed/debug/support-annotations-24.1.1_c4065f72b7cf3680d35d95256c181fcc3b265819.jar" />
+    </item>
+
+</items>
