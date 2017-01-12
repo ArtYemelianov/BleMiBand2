@@ -142,8 +142,7 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
             // This method will be invoked when a new page becomes selected.
             @Override
             public void onPageSelected(int position) {
-                Toast.makeText(MainActivity.this,
-                        "Selected page position: " + position, Toast.LENGTH_SHORT).show();
+                // Selected page position
             }
 
             // This method will be invoked when the current page is scrolled
@@ -164,6 +163,8 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, String.format("onCreated %s",
+                savedInstanceState == null ? " save is null" : "not null"));
         mHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -193,6 +194,7 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
                     Fragment fr = mPagerAdapter.getItem(1);
                     FirstFragment_ first = (FirstFragment_) fr;
                     first.addData(data);
+                    ;
                 }
             });
 
@@ -299,7 +301,8 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
                     return input.getUuid().equals(aUUID);
                 }
             }, null);
-            String message = service != null?"The service are selected":"Such element not found";
+            String message =
+                    service != null ? "The service are selected" : "Such element not found";
             showMessage(message);
         } else {
             DialogFragment dialog = EditNameDialogFragment.newInstance(ch);
@@ -334,6 +337,47 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
         @Override
         public CharSequence getPageTitle(int position) {
             return NUM_ITEMS.get(position).mTitle;
+        }
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d(TAG, "onSaveInstanceState " + (outState == null));
+        List list = Lists.transform(mCharacteristics, new Function<BluetoothGattCharacteristic, String>() {
+
+            @Override
+            public String apply(BluetoothGattCharacteristic input) {
+                return input.getUuid().toString();
+            }
+        });
+        outState.putStringArrayList("array", new ArrayList<>(list));
+
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d(TAG, "onRestart");
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Log.d(TAG, "onRestoreInstanceState " + (savedInstanceState == null));
+        if (savedInstanceState != null) {
+            Fragment fr = mPagerAdapter.getItem(0);
+            FirstFragment_ first = (FirstFragment_) fr;
+            showMessage("RestoreInstance" + savedInstanceState.getStringArrayList("array").get(0));
+
         }
 
     }

@@ -1,7 +1,14 @@
 package com.example.artus.ble_immediatealert;
 
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -19,6 +26,7 @@ import java.util.UUID;
 
 @EFragment(R.layout.fragment_first)
 public class FirstFragment extends Fragment {
+    private static String TAG = FirstFragment.class.toString();
 
     @ViewById(R.id.list)
     ListView mListView;
@@ -70,6 +78,56 @@ public class FirstFragment extends Fragment {
 //        BluetoothGattCharacteristic ch = mCharacteristics.get(aPosition);
 //        DialogFragment dialog = EditNameDialogFragment.newInstance(ch);
 //        dialog.show(manager, "dialog");
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d(TAG, "onSaveInstanceState");
+
+        outState.putStringArrayList("array", mData);
+
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.d(TAG, "onActivityCreated");
+        if (savedInstanceState != null) {
+            mData.addAll(savedInstanceState.getStringArrayList("array"));
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onActivityCreated");
+
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Log.d(TAG, "onAttach context");
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        Log.d(TAG, "onAttach activity");
+    }
+
+    @Override
+    public void onAttachFragment(Fragment childFragment) {
+        super.onAttachFragment(childFragment);
+        Log.d(TAG, "onAttachFragment");
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateView");
+        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     @UiThread
