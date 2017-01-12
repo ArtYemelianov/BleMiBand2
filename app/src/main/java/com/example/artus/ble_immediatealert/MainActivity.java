@@ -20,10 +20,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,7 +32,6 @@ import com.google.common.collect.Lists;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
@@ -46,15 +42,12 @@ import java.util.UUID;
 
 
 @EActivity(R.layout.activity_main)
-public class MainActivity extends AppCompatActivity implements EditNameDialogListener {
+public class MainActivity extends AppCompatActivity implements EditNameDialogListener, FirstFragment.FragmentListener {
     private static String TAG = MainActivity.class.toString();
     private static UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
     /* Views */
     @ViewById(R.id.label_main)
     TextView mLabel;
-
-    @ViewById(R.id.list)
-    ListView mListView;
 
     @ViewById(R.id.btn_search)
     Button mSearchBtn;
@@ -77,19 +70,8 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
     private BluetoothGatt mGatt;
     private BluetoothDevice mBluetoothDevice;
 
-    List<String> mData = new ArrayList<>();
-
-
     List<BluetoothGattService> mServices = new ArrayList<>();
     List<BluetoothGattCharacteristic> mCharacteristics = new ArrayList<>();
-
-    @ItemClick(R.id.list)
-    void handleItemClick(int aPosition) {
-        FragmentManager manager = getSupportFragmentManager();
-        BluetoothGattCharacteristic ch = mCharacteristics.get(aPosition);
-        DialogFragment dialog = EditNameDialogFragment.newInstance(ch);
-        dialog.show(manager, "dialog");
-    }
 
     @Click(R.id.btn_search)
     void handleSearch() {
@@ -140,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
         Toast.makeText(this, aText, Toast.LENGTH_SHORT).show();
     }
 
+
     @Click(R.id.btn_battery_level)
     void handleBatteryLevel() {
         //do nothing
@@ -147,9 +130,6 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
 
     @AfterViews
     public void init() {
-        ListAdapter adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mData);
-        mListView.setAdapter(adapter);
-
         mPagerAdapter = new MyPagerAdapter(getSupportFragmentManager());
         vpPager.setAdapter(mPagerAdapter);
 
@@ -199,8 +179,23 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
         }
 
         @Override
-        public void onAddServices(List<BluetoothGattService> aServices) {
+        public void onAddServices(final List<BluetoothGattService> aServices) {
             mServices.addAll(aServices);
+            final List data = Lists.transform(aServices, new Function<BluetoothGattService, String>() {
+                @Override
+                public String apply(BluetoothGattService input) {
+                    return input.getUuid().toString();
+                }
+            });
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Fragment fr = mPagerAdapter.getItem(1);
+                    FirstFragment_ first = (FirstFragment_) fr;
+                    first.addData(data);
+                }
+            });
+
         }
 
         @Override
@@ -217,11 +212,12 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
-                    mData.addAll(data);
-                    if (mData.contains(ALERT_LEVEL_CHARACTERISTIC.toString())) {
+                    Fragment fr = mPagerAdapter.getItem(0);
+                    FirstFragment_ first = (FirstFragment_) fr;
+                    first.addData(data);
+                    if (data.contains(ALERT_LEVEL_CHARACTERISTIC.toString())) {
                         mTriggerAlertBtn.setEnabled(true);
                     }
-                    ((ArrayAdapter) mListView.getAdapter()).notifyDataSetChanged();
                 }
             });
 
@@ -286,38 +282,58 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
         mGatt.writeCharacteristic(characteristic);
     }
 
+    @Override
+    public void handleItemClick(final UUID aUUID) {
+        //find in characteristic
+        BluetoothGattCharacteristic ch = Iterables.find(mCharacteristics, new Predicate<BluetoothGattCharacteristic>() {
+            @Override
+            public boolean apply(BluetoothGattCharacteristic input) {
+                return input.getUuid().equals(aUUID);
+            }
+        }, null);
+
+        if (ch == null) {
+            BluetoothGattService service = Iterables.find(mServices, new Predicate<BluetoothGattService>() {
+                @Override
+                public boolean apply(BluetoothGattService input) {
+                    return input.getUuid().equals(aUUID);
+                }
+            }, null);
+            String message = service != null?"The service are selected":"Such element not found";
+            showMessage(message);
+        } else {
+            DialogFragment dialog = EditNameDialogFragment.newInstance(ch);
+            dialog.show(getSupportFragmentManager(), "dialog");
+        }
+    }
+
     public static class MyPagerAdapter extends FragmentPagerAdapter {
-        private static int NUM_ITEMS = 3;
+        private final List<FirstFragment> NUM_ITEMS;
 
         public MyPagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
+            NUM_ITEMS = new ArrayList<>(2);
+            NUM_ITEMS.add(FirstFragment_.builder().mTitle("Characteristics").build());
+            NUM_ITEMS.add(FirstFragment_.builder().mTitle("Services").build());
+
         }
 
         // Returns total number of pages
         @Override
         public int getCount() {
-            return NUM_ITEMS;
+            return NUM_ITEMS.size();
         }
 
         // Returns the fragment to display for that page
         @Override
         public Fragment getItem(int position) {
-            switch (position) {
-                case 0: // Fragment # 0 - This will show FirstFragment
-                    return FirstFragment.newInstance(0, "Page # 1");
-                case 1: // Fragment # 0 - This will show FirstFragment different title
-                    return FirstFragment.newInstance(1, "Page # 2");
-                case 2: // Fragment # 1 - This will show SecondFragment
-                    return FirstFragment    .newInstance(2, "Page # 3");
-                default:
-                    return null;
-            }
+            return NUM_ITEMS.get(position);
         }
 
         // Returns the page title for the top indicator
         @Override
         public CharSequence getPageTitle(int position) {
-            return "Page " + position;
+            return NUM_ITEMS.get(position).mTitle;
         }
 
     }
