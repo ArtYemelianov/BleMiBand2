@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -213,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
 
     @UiThread
     void onDeviceFound(BluetoothDevice aDevice) {
+        mLabel.setBackgroundColor(Color.GREEN);
         mLabel.setText(aDevice.getAddress());
         mConnectBtn.setEnabled(true);
         mBluetoothDevice = aDevice;
