@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -385,13 +386,18 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.d(TAG, String.format("onConfigurationChanged, direction %d", newConfig.orientation));
+    }
+
+    @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         Log.d(TAG, "onRestoreInstanceState " + (savedInstanceState == null));
         if (savedInstanceState != null) {
-            Fragment fr = mPagerAdapter.getItem(0);
-            FirstFragment_ first = (FirstFragment_) fr;
-            showMessage("RestoreInstance" + savedInstanceState.getStringArrayList("array").get(0));
+            List list = savedInstanceState.getStringArrayList("array");
+            Log.d(TAG, String.format("size %d", list.size()));
         }
 
     }
