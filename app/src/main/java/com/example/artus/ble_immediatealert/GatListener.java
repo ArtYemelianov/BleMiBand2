@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.util.Log;
 
+import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -19,6 +20,8 @@ public class GatListener extends BluetoothGattCallback {
         void onAddServices(List<BluetoothGattService> aServices);
 
         void onAddCharacteristic(List<BluetoothGattCharacteristic> aCharacteristic);
+
+        void onBatteryRead(byte[] aValue, int aLevel, BatteryInfo.BatteryState aState, GregorianCalendar aLastTime);
     }
 
     private final CharacterisListener mListener;
@@ -30,10 +33,10 @@ public class GatListener extends BluetoothGattCallback {
     private void printCallBack(String aMethod, BluetoothGatt aGatt, int aStatus) {
         List<BluetoothGattService> services = aGatt.getServices();
         Log.d(TAG, String.format("%s size %s, status %d", aMethod, services.size(), aStatus));
-        for (BluetoothGattService item : services) {
-            String description = String.format("uuid %s", item.getUuid());
-            Log.d(TAG, String.format("service item %s ", description));
-        }
+//        for (BluetoothGattService item : services) {
+//            String description = String.format("uuid %s", item.getUuid());
+//            Log.d(TAG, String.format("service item %s ", description));
+//        }
     }
 
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -67,6 +70,9 @@ public class GatListener extends BluetoothGattCallback {
 
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
+        if (characteristic.getUuid().equals(MainActivity.BATTERY_INFO_CHARACTERISTIC)) {
+            handleBattryInfo(gatt, characteristic);
+        }
         printCallBack("onCharacteristicRead", gatt, status);
     }
 
@@ -77,7 +83,18 @@ public class GatListener extends BluetoothGattCallback {
 
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
+
         printCallBack("onCharacteristicChanged", gatt, 0);
+    }
+
+    private void handleBattryInfo(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        byte[] value = characteristic.getValue();
+        BatteryInfo info = new BatteryInfo(value);
+        int level = info.getLevelInPercent();
+        BatteryInfo.BatteryState state = info.getState();
+
+        GregorianCalendar lastTime = info.getLastChargeTime();
+        mListener.onBatteryRead(value, level, state, lastTime);
     }
 
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {

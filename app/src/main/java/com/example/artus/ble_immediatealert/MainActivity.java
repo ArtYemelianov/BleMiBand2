@@ -37,8 +37,12 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,7 +50,8 @@ import java.util.UUID;
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity implements EditNameDialogListener, FirstFragment.FragmentListener {
     private static String TAG = MainActivity.class.toString();
-    private static UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
+    public static UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
+    public static UUID BATTERY_INFO_CHARACTERISTIC = UUID.fromString("00000006-0000-3512-2118-0009af100700");
     /* Views */
     @ViewById(R.id.label_main)
     TextView mLabel;
@@ -93,13 +98,14 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
 
     @Click(R.id.btn_connect)
     void handleConnect() {
-        if (mBluetoothDevice != null) {
-            mGatt = mBluetoothDevice.connectGatt(this, true, new GatListener(mListener));
-            List<BluetoothGattService> services = mGatt.getServices();
-            for (BluetoothGattService item : services) {
-                String description = String.format("uuid %s", item.getUuid());
-                Log.d(TAG, String.format("handleConnect, %s", description));
-            }
+        if (mBluetoothDevice == null) {
+            throw new RuntimeException("The bluetooth device is null");
+        }
+        mGatt = mBluetoothDevice.connectGatt(this, true, new GatListener(mListener));
+        List<BluetoothGattService> services = mGatt.getServices();
+        for (BluetoothGattService item : services) {
+            String description = String.format("uuid %s", item.getUuid());
+            Log.d(TAG, String.format("handleConnect, %s", description));
         }
     }
 
@@ -127,7 +133,18 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
 
     @Click(R.id.btn_battery_level)
     void handleBatteryLevel() {
-        //do nothing
+        BluetoothGattCharacteristic ch = Iterables.find(mCharacteristics, new Predicate<BluetoothGattCharacteristic>() {
+            @Override
+            public boolean apply(BluetoothGattCharacteristic input) {
+                return input.getUuid().equals(BATTERY_INFO_CHARACTERISTIC);
+            }
+        }, null);
+        if (ch == null) {
+            showMessage("The characteristic not found");
+        } else {
+            boolean success = mGatt.readCharacteristic(ch);
+            showMessage(String.format("The battery level was read %s", success));
+        }
     }
 
     @AfterViews
@@ -187,6 +204,7 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    mBatteryLevelBtn.setEnabled(true);
                     mTriggerAlertBtn.setEnabled(true);
                 }
             });
@@ -232,9 +250,30 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
                     if (data.contains(ALERT_LEVEL_CHARACTERISTIC.toString())) {
                         mTriggerAlertBtn.setEnabled(true);
                     }
+                    if (data.contains(BATTERY_INFO_CHARACTERISTIC.toString())) {
+                        mBatteryLevelBtn.setEnabled(true);
+                    }
                 }
             });
 
+        }
+
+        @UiThread
+        @Override
+        public void onBatteryRead(byte[] aValue, int aLevel, BatteryInfo.BatteryState aState, GregorianCalendar aLastTime) {
+//            showMessage("Battery level is " + aLevel + aLastTime.);
+            FragmentManager manager = getSupportFragmentManager();
+            ArrayList list = new ArrayList<String>();
+            list.add("Level is: " + aLevel);
+            list.add("Battery state: " + aState.toString());
+
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss.SSS");
+            formatter.setCalendar(aLastTime);
+            String dateFormatted = formatter.format(aLastTime.getTime());
+
+            list.add("last change: " + dateFormatted);
+            DialogFragment fr = FragmentInfo_.builder().mData(list).build();
+            fr.show(manager,"dialog");
         }
     };
 

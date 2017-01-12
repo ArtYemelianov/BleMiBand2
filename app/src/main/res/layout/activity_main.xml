@@ -24,6 +24,7 @@
         android:id="@+id/btn_battery_level"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:enabled="false"
         android:text="Battery Level"/>
 
     <Button
