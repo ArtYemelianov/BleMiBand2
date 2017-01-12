@@ -37,6 +37,7 @@ import org.androidannotations.annotations.ViewById;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -130,7 +131,11 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
 
     @AfterViews
     public void init() {
-        mPagerAdapter = new MyPagerAdapter(getSupportFragmentManager());
+        Log.d(TAG, "The init is called");
+        if (mPagerAdapter == null) {
+            Log.d(TAG, "The pagerAdapter create in init()");
+            mPagerAdapter = new MyPagerAdapter(getSupportFragmentManager());
+        }
         vpPager.setAdapter(mPagerAdapter);
 
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -165,6 +170,13 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
         super.onCreate(savedInstanceState);
         Log.d(TAG, String.format("onCreated %s",
                 savedInstanceState == null ? " save is null" : "not null"));
+        if (savedInstanceState != null) {
+
+            FirstFragment fr0 = (FirstFragment) getSupportFragmentManager().getFragment(savedInstanceState, "page0");
+            FirstFragment fr1 = (FirstFragment) getSupportFragmentManager().getFragment(savedInstanceState, "page1");
+            Log.d(TAG, String.format("onCreated instances %s %s", fr0, fr1));
+            mPagerAdapter = new MyPagerAdapter(getSupportFragmentManager(), Arrays.asList(fr0, fr1));
+        }
         mHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -194,7 +206,6 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
                     Fragment fr = mPagerAdapter.getItem(1);
                     FirstFragment_ first = (FirstFragment_) fr;
                     first.addData(data);
-                    ;
                 }
             });
 
@@ -313,12 +324,15 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
     public static class MyPagerAdapter extends FragmentPagerAdapter {
         private final List<FirstFragment> NUM_ITEMS;
 
-        public MyPagerAdapter(FragmentManager fragmentManager) {
+        public MyPagerAdapter(FragmentManager fragmentManager, List<FirstFragment> aList) {
             super(fragmentManager);
-            NUM_ITEMS = new ArrayList<>(2);
-            NUM_ITEMS.add(FirstFragment_.builder().mTitle("Characteristics").build());
-            NUM_ITEMS.add(FirstFragment_.builder().mTitle("Services").build());
+            NUM_ITEMS = aList;
+        }
 
+        public MyPagerAdapter(FragmentManager fragmentManager) {
+            this(fragmentManager, Arrays.asList(
+                    FirstFragment_.builder().mTitle("Characteristics").build(),
+                    FirstFragment_.builder().mTitle("Services").build()));
         }
 
         // Returns total number of pages
@@ -359,7 +373,8 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
             }
         });
         outState.putStringArrayList("array", new ArrayList<>(list));
-
+        getSupportFragmentManager().putFragment(outState, "page0", mPagerAdapter.getItem(0));
+        getSupportFragmentManager().putFragment(outState, "page1", mPagerAdapter.getItem(1));
     }
 
     @Override
@@ -377,7 +392,6 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
             Fragment fr = mPagerAdapter.getItem(0);
             FirstFragment_ first = (FirstFragment_) fr;
             showMessage("RestoreInstance" + savedInstanceState.getStringArrayList("array").get(0));
-
         }
 
     }
