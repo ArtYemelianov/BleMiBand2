@@ -175,16 +175,16 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
             mCharacteristics.addAll(aCharacteristic);
 
             //stores uuids
-            List data = Lists.transform(aCharacteristic, new Function<BluetoothGattCharacteristic, String>() {
+            final List data = Lists.transform(aCharacteristic, new Function<BluetoothGattCharacteristic, String>() {
                 @Override
                 public String apply(BluetoothGattCharacteristic input) {
                     return input.getUuid().toString();
                 }
             });
-            mData.addAll(data);
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
+                    mData.addAll(data);
                     if (mData.contains(ALERT_LEVEL_CHARACTERISTIC.toString())) {
                         mTriggerAlertBtn.setEnabled(true);
                     }
