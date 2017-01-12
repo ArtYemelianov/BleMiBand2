@@ -12,21 +12,12 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -37,149 +28,64 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Click;
+import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.ItemClick;
+import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.ViewById;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements EditNameDialogListener {
 
-    Handler mHandler;
-    BluetoothAdapter mBluetoothAdapter;
-    BluetoothDevice mBluetoothDevice;
+@EActivity(R.layout.activity_main)
+public class MainActivity extends AppCompatActivity implements EditNameDialogListener {
+    private static String TAG = MainActivity.class.toString();
+    private static UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
+    /* Views */
+    @ViewById(R.id.label_main)
     TextView mLabel;
+
+    @ViewById(R.id.list)
+    ListView mListView;
+
+    @ViewById(R.id.btn_search)
+    Button mSearchBtn;
+
+    @ViewById(R.id.btn_battery_level)
+    Button mBatteryLevelBtn;
+
+    @ViewById(R.id.btn_connect)
+    Button mConnectBtn;
+
+    @ViewById(R.id.btn_trigger_alert)
+    Button mTriggerAlertBtn;
+
+
+    private Handler mHandler;
+    BluetoothAdapter mBluetoothAdapter;
+    BluetoothGatt mGatt;
+    BluetoothDevice mBluetoothDevice;
+
     List<String> mData = new ArrayList<>();
 
-    ListView mListView;
+
     List<BluetoothGattService> mServices = new ArrayList<>();
-    List<BluetoothGattCharacteristic> mCharacteristic = new ArrayList<>();
+    List<BluetoothGattCharacteristic> mCharacteristics = new ArrayList<>();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        mHandler = new Handler(Looper.getMainLooper());
-        mListView = (ListView) findViewById(R.id.list);
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                FragmentManager manager = getSupportFragmentManager();
-                BluetoothGattCharacteristic ch = mCharacteristic.get(position);
-                DialogFragment dialog = EditNameDialogFragment.newInstance(ch);
-                dialog.show(manager, "dialog");
-            }
-        });
-        ListAdapter adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mData);
-
-        mListView.setAdapter(adapter);
-
-        mLabel = (TextView) MainActivity.this.findViewById(R.id.label_main);
-
-        Button connect = (Button) findViewById(R.id.btn_connect);
-        connect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                handleConnect();
-            }
-        });
-
-        Button trrigger = (Button) findViewById(R.id.btn_trigger_alert);
-        trrigger.setEnabled(false);
-        trrigger.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                handleTrigger();
-            }
-        });
-
-        Button putValue = (Button) findViewById(R.id.put_value);
-        putValue.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //TODO
-                if (mCh == null) {
-                    Toast.makeText(MainActivity.this, "Cha Is null", Toast.LENGTH_SHORT).show();
-                }
-                Toast.makeText(MainActivity.this, "CSet value", Toast.LENGTH_SHORT).show();
-                BluetoothGattCharacteristic ch = mCh.getCharacteristics().get(0);
-                ch.setValue(new byte[]{02});
-                mGatt.writeCharacteristic(ch);
-            }
-        });
-
-        Button batteryLevel = (Button) findViewById(R.id.btn_battery_level);
-        batteryLevel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FragmentManager manager = getSupportFragmentManager();
-                DialogFragment dialog = EditNameDialogFragment.newInstance(null);
-                dialog.show(manager, "dialog");
-            }
-        });
-
-
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, "Ble not support", Toast.LENGTH_SHORT).show();
-            connect.setEnabled(false);
-            trrigger.setEnabled(false);
-        }
+    @ItemClick(R.id.list)
+    void handleItemClick(int aPosition) {
+        FragmentManager manager = getSupportFragmentManager();
+        BluetoothGattCharacteristic ch = mCharacteristics.get(aPosition);
+        DialogFragment dialog = EditNameDialogFragment.newInstance(ch);
+        dialog.show(manager, "dialog");
     }
 
-    public BluetoothGatt mGatt;
-    private BluetoothGattService mCh;
-    private final GatListener.CharacterisListener mListener = new GatListener.CharacterisListener() {
-        @Override
-        public void onStored(BluetoothGatt gatt, BluetoothGattService aCh) {
-            mCh = aCh;
-            mGatt = gatt;
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    findViewById(R.id.put_value).setEnabled(true);
-                }
-            });
-        }
-
-        @Override
-        public void onAddServices(List<BluetoothGattService> aServices) {
-            mServices.addAll(aServices);
-        }
-
-        @Override
-        public void onAddCharacteristic(List<BluetoothGattCharacteristic> aCharacteristic) {
-            mCharacteristic.addAll(aCharacteristic);
-            List data = Lists.transform(aCharacteristic, new Function<BluetoothGattCharacteristic, String>() {
-                @Override
-                public String apply(BluetoothGattCharacteristic input) {
-                    return input.getUuid().toString();
-                }
-            });
-            mData.addAll(data);
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    ((ArrayAdapter) mListView.getAdapter()).notifyDataSetChanged();
-                }
-            });
-
-        }
-    };
-
-    private void handleTrigger() {
-        if (mBluetoothDevice != null) {
-            BluetoothGatt bluetoothGatt = mBluetoothDevice.connectGatt(this, false, new GatListener(mListener));
-            bluetoothGatt.connect();
-            List<BluetoothGattService> services = bluetoothGatt.getServices();
-            for (BluetoothGattService item : services) {
-                String description = String.format("uuid %s", item.getUuid());
-                Log.d("Services", description);
-            }
-            bluetoothGatt.discoverServices();
-        }
-    }
-
-    private void handleConnect() {
-// Initializes Bluetooth adapter.
+    @Click(R.id.btn_search)
+    void handleSearch() {
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
@@ -194,44 +100,147 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
         }
     }
 
+    @Click(R.id.btn_connect)
+    void handleConnect() {
+        if (mBluetoothDevice != null) {
+            mGatt = mBluetoothDevice.connectGatt(this, true, new GatListener(mListener));
+            List<BluetoothGattService> services = mGatt.getServices();
+            for (BluetoothGattService item : services) {
+                String description = String.format("uuid %s", item.getUuid());
+                Log.d(TAG, String.format("handleConnect, %s", description));
+            }
+        }
+    }
+
+    @Click(R.id.btn_trigger_alert)
+    void handleTriggerAlert() {
+        BluetoothGattCharacteristic ch = Iterables.find(mCharacteristics, new Predicate<BluetoothGattCharacteristic>() {
+            @Override
+            public boolean apply(BluetoothGattCharacteristic input) {
+                return input.getUuid().equals(ALERT_LEVEL_CHARACTERISTIC);
+            }
+        });
+        if (ch != null) {
+            ch.setValue(new byte[]{02});
+            mGatt.writeCharacteristic(ch);
+        } else {
+            showMessage("The immediate service not found");
+        }
+    }
+
+    @UiThread
+    void showMessage(String aText) {
+        Toast.makeText(this, aText, Toast.LENGTH_SHORT).show();
+    }
+
+    @Click(R.id.btn_battery_level)
+    void handleBatteryLevel() {
+        //do nothing
+    }
+
+    @AfterViews
+    public void init() {
+        ListAdapter adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mData);
+        mListView.setAdapter(adapter);
+
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            showMessage("Ble not support");
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mHandler = new Handler(Looper.getMainLooper());
+    }
+
+    private final GatListener.CharacterisListener mListener = new GatListener.CharacterisListener() {
+        public void onStored(BluetoothGatt gatt, BluetoothGattService aCh) {
+            mGatt = gatt;
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mTriggerAlertBtn.setEnabled(true);
+                }
+            });
+        }
+
+        @Override
+        public void onAddServices(List<BluetoothGattService> aServices) {
+            mServices.addAll(aServices);
+        }
+
+        @Override
+        public void onAddCharacteristic(List<BluetoothGattCharacteristic> aCharacteristic) {
+            mCharacteristics.addAll(aCharacteristic);
+
+            //stores uuids
+            List data = Lists.transform(aCharacteristic, new Function<BluetoothGattCharacteristic, String>() {
+                @Override
+                public String apply(BluetoothGattCharacteristic input) {
+                    return input.getUuid().toString();
+                }
+            });
+            mData.addAll(data);
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    if (mData.contains(ALERT_LEVEL_CHARACTERISTIC.toString())) {
+                        mTriggerAlertBtn.setEnabled(true);
+                    }
+                    ((ArrayAdapter) mListView.getAdapter()).notifyDataSetChanged();
+                }
+            });
+
+        }
+    };
+
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    mBluetoothAdapter.stopLeScan(mCallBack);
+                    mBluetoothAdapter.stopLeScan(mStopedLeCallBack);
                 }
             }, 10000);
 
-            mBluetoothAdapter.startLeScan(mCallBack);
+            mBluetoothAdapter.startLeScan(mStartedLeCallBack);
         } else {
-            mBluetoothAdapter.stopLeScan(mCallBack);
+            mBluetoothAdapter.stopLeScan(mStopedLeCallBack);
         }
     }
 
-    private final BluetoothAdapter.LeScanCallback mCallBack = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(final BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
-            String address = bluetoothDevice.getName();
-            Log.d("LE Bluetooth", String.format("address %s", address));
-            if (address.contains("Angel")) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mLabel.setText(bluetoothDevice.getAddress());
-                        findViewById(R.id.btn_trigger_alert).setEnabled(true);
-                    }
-                });
+    @UiThread
+    void onDeviceFound(BluetoothDevice aDevice) {
+        mLabel.setText(aDevice.getAddress());
+        mConnectBtn.setEnabled(true);
+        mBluetoothDevice = aDevice;
+    }
 
-                mBluetoothDevice = bluetoothDevice;
+    private final BluetoothAdapter.LeScanCallback mStopedLeCallBack = new BluetoothAdapter.LeScanCallback() {
+        @Override
+        public void onLeScan(final BluetoothDevice aBluetoothDevice, int i, byte[] bytes) {
+            String address = aBluetoothDevice.getName();
+            Log.d(TAG, String.format("mStopedLeCallBack, address %s", address));
+        }
+    };
+
+    private final BluetoothAdapter.LeScanCallback mStartedLeCallBack = new BluetoothAdapter.LeScanCallback() {
+        @Override
+        public void onLeScan(final BluetoothDevice aBluetoothDevice, int i, byte[] bytes) {
+            String address = aBluetoothDevice.getName();
+            Log.d(TAG, String.format("mStartedLeCallBack, address %s", address));
+            if (address.contains("Band")) {
+                mBluetoothAdapter.stopLeScan(null);
+                onDeviceFound(aBluetoothDevice);
             }
         }
     };
 
     @Override
     public void onValueChanged(final String aUuid, String aValue) {
-        BluetoothGattCharacteristic characteristic = Iterables.find(mCharacteristic, new Predicate<BluetoothGattCharacteristic>() {
+        BluetoothGattCharacteristic characteristic = Iterables.find(mCharacteristics, new Predicate<BluetoothGattCharacteristic>() {
             public boolean apply(BluetoothGattCharacteristic uuid) {
                 return uuid.getUuid().equals(UUID.fromString(aUuid));
             }

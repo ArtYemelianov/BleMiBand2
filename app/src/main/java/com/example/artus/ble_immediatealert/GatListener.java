@@ -8,16 +8,14 @@ import android.bluetooth.BluetoothGattService;
 import android.util.Log;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Created by artus on 13.12.16.
  */
 public class GatListener extends BluetoothGattCallback {
+    private static String TAG = GatListener.class.toString();
 
     interface CharacterisListener {
-        void onStored(BluetoothGatt tt, BluetoothGattService aCh);
-
         void onAddServices(List<BluetoothGattService> aServices);
 
         void onAddCharacteristic(List<BluetoothGattCharacteristic> aCharacteristic);
@@ -29,76 +27,82 @@ public class GatListener extends BluetoothGattCallback {
         mListener = aListener;
     }
 
-    private void printCharacteristic(String aMethod, BluetoothGattService aService) {
-        List<BluetoothGattCharacteristic> services = aService.getCharacteristics();
-        Log.d("printCharacteristic", String.format("%s size %s", aMethod, services.size()));
-        for (BluetoothGattCharacteristic item : services) {
-            String description = String.format("uuid %s", item.getUuid());
-            Log.d("Characteristic", description);
-        }
-    }
-
-    private void printCallBack(String aMethod, BluetoothGatt aGatt) {
+    private void printCallBack(String aMethod, BluetoothGatt aGatt, int aStatus) {
         List<BluetoothGattService> services = aGatt.getServices();
-        Log.d("PrintCalbacck", String.format("%s size %s", aMethod, services.size()));
+        Log.d(TAG, String.format("%s size %s, status %d", aMethod, services.size(), aStatus));
         for (BluetoothGattService item : services) {
             String description = String.format("uuid %s", item.getUuid());
-            Log.d("Services", description);
+            Log.d(TAG, String.format("service item %s ", description));
         }
     }
 
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-        printCallBack("onConnectionStateChange", gatt);
+        super.onConnectionStateChange(gatt, status, newState);
+        printCallBack(String.format("onConnectionStateChange, new state %d", newState), gatt, status);
+        gatt.discoverServices();
     }
 
-    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-        printCallBack("onServicesDiscovered", gatt);
-        BluetoothGattService service = gatt.getService(UUID.fromString("00001802-0000-1000-8000-00805f9b34fb"));
 
+    @Override
+    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+        super.onServicesDiscovered(gatt, status);
+        printCallBack("onServicesDiscovered", gatt, status);
         mListener.onAddServices(gatt.getServices());
 
         for (BluetoothGattService item : gatt.getServices()) {
             mListener.onAddCharacteristic(item.getCharacteristics());
-        }
 
-        if (service != null) {
-            printCharacteristic("onServicesDiscovered", service);
-            mListener.onStored(gatt, service);
-        } else {
-            Log.d("onServicesDiscovered", "Uuid is null");
+            enableNotifications(item, gatt);
         }
+    }
 
+    private void enableNotifications(BluetoothGattService aService, BluetoothGatt aBluetoothGatt) {
+        for (BluetoothGattCharacteristic item : aService.getCharacteristics()) {
+            for (BluetoothGattDescriptor descriptor : item.getDescriptors()) {
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                aBluetoothGatt.writeDescriptor(descriptor);
+            }
+        }
     }
 
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        printCallBack("onCharacteristicRead", gatt);
+        super.onCharacteristicRead(gatt, characteristic, status);
+        printCallBack("onCharacteristicRead", gatt, status);
     }
 
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        printCallBack("onCharacteristicWrite", gatt);
+        super.onCharacteristicWrite(gatt, characteristic, status);
+        printCallBack("onCharacteristicWrite", gatt, status);
     }
 
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-        printCallBack("onCharacteristicChanged", gatt);
+        super.onCharacteristicChanged(gatt, characteristic);
+        printCallBack("onCharacteristicChanged", gatt, 0);
     }
 
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        printCallBack("onDescriptorRead", gatt);
+        super.onDescriptorRead(gatt, descriptor, status);
+        printCallBack("onDescriptorRead", gatt, status);
     }
 
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        printCallBack("onDescriptorWrite", gatt);
+        super.onDescriptorWrite(gatt, descriptor, status);
+        printCallBack("onDescriptorWrite", gatt, status);
     }
 
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
-        printCallBack("onReliableWriteCompleted", gatt);
+        super.onReliableWriteCompleted(gatt, status);
+        printCallBack("onReliableWriteCompleted", gatt, status);
     }
 
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-        printCallBack("onReadRemoteRssi", gatt);
+        super.onReadRemoteRssi(gatt, rssi, status);
+        printCallBack("onReadRemoteRssi", gatt, status);
     }
 
     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-        printCallBack("onMtuChanged", gatt);
+        super.onMtuChanged(gatt, mtu, status);
+        printCallBack("onMtuChanged", gatt, status);
     }
+
 }

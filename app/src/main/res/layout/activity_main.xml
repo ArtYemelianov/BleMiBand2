@@ -11,10 +11,10 @@
         android:text="Hello World!"/>
 
     <Button
-        android:id="@+id/btn_connect"
+        android:id="@+id/btn_search"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Connect to Mi band"/>
+        android:text="Start search"/>
 
     <Button
         android:id="@+id/btn_battery_level"
@@ -23,17 +23,18 @@
         android:text="Battery Level"/>
 
     <Button
-        android:id="@+id/btn_trigger_alert"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Trigger alert"/>
-
-    <Button
-        android:id="@+id/put_value"
+        android:id="@+id/btn_connect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:enabled="false"
-        android:text="put Value"/>
+        android:text="Connect to device"/>
+
+    <Button
+        android:id="@+id/btn_trigger_alert"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="Trigger Alert"/>
 
     <ListView
         android:id="@+id/list"
