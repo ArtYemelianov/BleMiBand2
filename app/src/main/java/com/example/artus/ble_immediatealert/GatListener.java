@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.util.Log;
 
+import com.google.common.primitives.Bytes;
+
 import java.util.GregorianCalendar;
 import java.util.List;
 
@@ -22,6 +24,12 @@ public class GatListener extends BluetoothGattCallback {
         void onAddCharacteristic(List<BluetoothGattCharacteristic> aCharacteristic);
 
         void onBatteryRead(byte[] aValue, int aLevel, BatteryInfo.BatteryState aState, GregorianCalendar aLastTime);
+
+        void onAuthRead(byte[] value, int aLevel);
+
+        void onAuthReadDescriptor(byte[] aValue);
+
+        void onCharacteristicChanged(String aValue);
     }
 
     private final CharacterisListener mListener;
@@ -72,8 +80,15 @@ public class GatListener extends BluetoothGattCallback {
         super.onCharacteristicRead(gatt, characteristic, status);
         if (characteristic.getUuid().equals(MainActivity.BATTERY_INFO_CHARACTERISTIC)) {
             handleBattryInfo(gatt, characteristic);
+        } else if (characteristic.getUuid().equals(NotifyAction.AUTH_UUID)) {
+            handleAuthRead(gatt, characteristic);
         }
         printCallBack("onCharacteristicRead", gatt, status);
+    }
+
+    private void handleAuthRead(BluetoothGatt aGatt, BluetoothGattCharacteristic aCharacteristic) {
+        byte[] arr = aCharacteristic.getValue();
+        mListener.onAuthRead(arr, 0);
     }
 
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
@@ -83,8 +98,11 @@ public class GatListener extends BluetoothGattCallback {
 
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
-
         printCallBack("onCharacteristicChanged", gatt, 0);
+        List<Byte> objectArray = Bytes.asList(characteristic.getValue());
+        String value = objectArray.toString();
+        Log.d(TAG, String.format("value is %s %s ", characteristic.getUuid(), value));
+        mListener.onCharacteristicChanged(value);
     }
 
     private void handleBattryInfo(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
@@ -99,6 +117,7 @@ public class GatListener extends BluetoothGattCallback {
 
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         super.onDescriptorRead(gatt, descriptor, status);
+        mListener.onAuthReadDescriptor(descriptor.getValue());
         printCallBack("onDescriptorRead", gatt, status);
     }
 

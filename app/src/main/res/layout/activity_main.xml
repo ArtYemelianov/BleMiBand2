@@ -41,6 +41,13 @@
         android:enabled="false"
         android:text="Trigger Alert"/>
 
+    <Button
+        android:id="@+id/btn_use_notification"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="Use notification"/>
+
     <android.support.v4.view.ViewPager
         android:id="@+id/vpPager"
         android:layout_width="match_parent"

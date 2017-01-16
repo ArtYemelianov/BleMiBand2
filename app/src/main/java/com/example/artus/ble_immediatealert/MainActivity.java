@@ -37,18 +37,16 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.math.BigInteger;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.UUID;
 
 
 @EActivity(R.layout.activity_main)
-public class MainActivity extends AppCompatActivity implements EditNameDialogListener, FirstFragment.FragmentListener {
+public class MainActivity extends AppCompatActivity implements EditNameDialogListener, FirstFragment.FragmentListener, IActivityPersistence {
     private static String TAG = MainActivity.class.toString();
     public static UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
     public static UUID BATTERY_INFO_CHARACTERISTIC = UUID.fromString("00000006-0000-3512-2118-0009af100700");
@@ -61,6 +59,9 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
 
     @ViewById(R.id.btn_battery_level)
     Button mBatteryLevelBtn;
+
+    @ViewById(R.id.btn_use_notification)
+    Button mUseNotificationBtn;
 
     @ViewById(R.id.btn_connect)
     Button mConnectBtn;
@@ -94,6 +95,12 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
         } else {
             scanLeDevice(true);
         }
+    }
+
+    @Click(R.id.btn_use_notification)
+    void handleUseNotification() {
+        DialogFragment dialog = NotificationFragment_.builder().build();
+        dialog.show(getSupportFragmentManager(), "dialogFragment");
     }
 
     @Click(R.id.btn_connect)
@@ -206,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
                 public void run() {
                     mBatteryLevelBtn.setEnabled(true);
                     mTriggerAlertBtn.setEnabled(true);
+                    mUseNotificationBtn.setEnabled(true);
                 }
             });
         }
@@ -253,6 +261,9 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
                     if (data.contains(BATTERY_INFO_CHARACTERISTIC.toString())) {
                         mBatteryLevelBtn.setEnabled(true);
                     }
+                    if (data.contains(NotifyAction.AUTH_UUID.toString())) {
+                        mUseNotificationBtn.setEnabled(true);
+                    }
                 }
             });
 
@@ -273,7 +284,26 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
 
             list.add("last change: " + dateFormatted);
             DialogFragment fr = FragmentInfo_.builder().mData(list).build();
-            fr.show(manager,"dialog");
+            fr.show(manager, "dialog");
+        }
+
+        @Override
+        public void onAuthRead(byte[] value, int aLevel) {
+            NotificationFragment fr = (NotificationFragment )getSupportFragmentManager().findFragmentByTag("dialogFragment");
+            fr.setReadValue(value);
+
+        }
+
+        @Override
+        public void onAuthReadDescriptor(byte[] aValue) {
+            NotificationFragment fr = (NotificationFragment )getSupportFragmentManager().findFragmentByTag("dialogFragment");
+            fr.setReadValue(aValue);
+        }
+
+        @Override
+        public void onCharacteristicChanged(String aValue) {
+            NotificationFragment fr = (NotificationFragment )getSupportFragmentManager().findFragmentByTag("dialogFragment");
+            fr.setReadValue(aValue);
         }
     };
 
@@ -359,6 +389,22 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
             DialogFragment dialog = EditNameDialogFragment.newInstance(ch);
             dialog.show(getSupportFragmentManager(), "dialog");
         }
+    }
+
+    @Override
+    public BluetoothGattCharacteristic getCharacteristic(final UUID aUUID) {
+        BluetoothGattCharacteristic ch = Iterables.find(mCharacteristics, new Predicate<BluetoothGattCharacteristic>() {
+            @Override
+            public boolean apply(BluetoothGattCharacteristic input) {
+                return input.getUuid().equals(aUUID);
+            }
+        });
+        return ch;
+    }
+
+    @Override
+    public BluetoothGatt getGatt() {
+        return mGatt;
     }
 
     public static class MyPagerAdapter extends FragmentPagerAdapter {
