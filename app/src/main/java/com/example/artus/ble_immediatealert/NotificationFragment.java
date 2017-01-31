@@ -48,7 +48,8 @@ public class NotificationFragment extends DialogFragment {
 
     @Click(R.id.btn_read_data)
     void handleReadData() {
-        mAction.readData();
+        String read = mAction.readData();
+        int data= 0;
     }
 
     @Click(R.id.btn_read_descriptor)

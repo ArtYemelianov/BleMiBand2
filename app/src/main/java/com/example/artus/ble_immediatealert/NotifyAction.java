@@ -46,7 +46,10 @@ public class NotifyAction {
 
     public String readData() {
         mGatt.readCharacteristic(mCharacteristic);
-        return "";
+
+        int properties = mCharacteristic.getProperties();
+        int permission = mCharacteristic.getPermissions();
+        return String.format("per: %X, properties: %X, %s", permission, properties, mCharacteristic.getUuid());
     }
 
     void readDescriptor() {

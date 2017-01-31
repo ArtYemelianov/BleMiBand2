@@ -49,7 +49,6 @@ public class EditNameDialogFragment extends DialogFragment {
         ((TextView) view.findViewById(R.id.dialog_properties)).setText(String.valueOf(properties));
         ((TextView) view.findViewById(R.id.dialog_uuid)).setText(uuid);
 
-
         mEditText = (EditText) view.findViewById(R.id.txt_your_name);
         getDialog().setTitle(uuid);
         // Show soft keyboard automatically and request focus to field

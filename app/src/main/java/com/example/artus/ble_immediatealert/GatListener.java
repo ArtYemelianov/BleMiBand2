@@ -30,6 +30,8 @@ public class GatListener extends BluetoothGattCallback {
         void onAuthReadDescriptor(byte[] aValue);
 
         void onCharacteristicChanged(String aValue);
+
+        void onHeartPulseMeasured(String aValue);
     }
 
     private final CharacterisListener mListener;
@@ -82,7 +84,12 @@ public class GatListener extends BluetoothGattCallback {
             handleBattryInfo(gatt, characteristic);
         } else if (characteristic.getUuid().equals(NotifyAction.AUTH_UUID)) {
             handleAuthRead(gatt, characteristic);
+        } else if (characteristic.getUuid().equals(HeartAction.UUID_CHAR_HEART_RATE_MEASUREMENT)) {
+            List<Byte> objectArray = Bytes.asList(characteristic.getValue());
+            String value = objectArray.toString();
+            mListener.onHeartPulseMeasured(value);
         }
+
         printCallBack("onCharacteristicRead", gatt, status);
     }
 
@@ -103,6 +110,11 @@ public class GatListener extends BluetoothGattCallback {
         String value = objectArray.toString();
         Log.d(TAG, String.format("value is %s %s ", characteristic.getUuid(), value));
         mListener.onCharacteristicChanged(value);
+
+        if (characteristic.getUuid().equals(HeartAction.UUID_CHAR_HEART_RATE_MEASUREMENT)) {
+            Log.d(TAG, String.format("value is %s %s ", characteristic.getUuid(), value));
+            mListener.onHeartPulseMeasured(value);
+        }
     }
 
     private void handleBattryInfo(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
@@ -117,7 +129,11 @@ public class GatListener extends BluetoothGattCallback {
 
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         super.onDescriptorRead(gatt, descriptor, status);
+
+        List<Byte> objectArray = Bytes.asList(descriptor.getValue());
+        String value = objectArray.toString();
         mListener.onAuthReadDescriptor(descriptor.getValue());
+        mListener.onHeartPulseMeasured(value);
         printCallBack("onDescriptorRead", gatt, status);
     }
 

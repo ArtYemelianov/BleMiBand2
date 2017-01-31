@@ -63,6 +63,10 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
     @ViewById(R.id.btn_use_notification)
     Button mUseNotificationBtn;
 
+    @ViewById(R.id.btn_heart_rate)
+    Button mHeartRateBtn;
+
+
     @ViewById(R.id.btn_connect)
     Button mConnectBtn;
 
@@ -101,6 +105,12 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
     void handleUseNotification() {
         DialogFragment dialog = NotificationFragment_.builder().build();
         dialog.show(getSupportFragmentManager(), "dialogFragment");
+    }
+
+    @Click(R.id.btn_heart_rate)
+    void handleHeartRate() {
+        DialogFragment dialog = HeartFragment_.builder().build();
+        dialog.show(getSupportFragmentManager(), "dialog");
     }
 
     @Click(R.id.btn_connect)
@@ -214,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
                     mBatteryLevelBtn.setEnabled(true);
                     mTriggerAlertBtn.setEnabled(true);
                     mUseNotificationBtn.setEnabled(true);
+                    mHeartRateBtn.setEnabled(true);
                 }
             });
         }
@@ -264,6 +275,9 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
                     if (data.contains(NotifyAction.AUTH_UUID.toString())) {
                         mUseNotificationBtn.setEnabled(true);
                     }
+                    if (data.contains(HeartAction.UUID_CHAR_HEART_RATE_MEASUREMENT.toString())) {
+                        mHeartRateBtn.setEnabled(true);
+                    }
                 }
             });
 
@@ -289,21 +303,37 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
 
         @Override
         public void onAuthRead(byte[] value, int aLevel) {
-            NotificationFragment fr = (NotificationFragment )getSupportFragmentManager().findFragmentByTag("dialogFragment");
-            fr.setReadValue(value);
+            NotificationFragment fr = (NotificationFragment) getSupportFragmentManager().findFragmentByTag("dialogFragment");
+            if(fr != null){
+                fr.setReadValue(value);
+            }
 
         }
 
         @Override
         public void onAuthReadDescriptor(byte[] aValue) {
-            NotificationFragment fr = (NotificationFragment )getSupportFragmentManager().findFragmentByTag("dialogFragment");
-            fr.setReadValue(aValue);
+            NotificationFragment fr = (NotificationFragment) getSupportFragmentManager().findFragmentByTag("dialogFragment");
+            if(fr != null){
+                fr.setReadValue(aValue);
+            }
         }
 
         @Override
         public void onCharacteristicChanged(String aValue) {
-            NotificationFragment fr = (NotificationFragment )getSupportFragmentManager().findFragmentByTag("dialogFragment");
-            fr.setReadValue(aValue);
+            NotificationFragment fr = (NotificationFragment) getSupportFragmentManager().findFragmentByTag("dialogFragment");
+            if(fr != null){
+                fr.setReadValue(aValue);
+            }
+        }
+
+        @Override
+        public void onHeartPulseMeasured(String aValue) {
+
+
+            HeartFragment fr = (HeartFragment) getSupportFragmentManager().findFragmentByTag("dialog");
+            if(fr != null){
+                fr.setHeartRate(aValue);
+            }
         }
     };
 
