@@ -364,17 +364,18 @@ public class MainActivity extends AppCompatActivity implements EditNameDialogLis
     private final BluetoothAdapter.LeScanCallback mStopedLeCallBack = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice aBluetoothDevice, int i, byte[] bytes) {
-            String address = aBluetoothDevice.getName();
-            Log.d(TAG, String.format("mStopedLeCallBack, address %s", address));
+            Log.d(TAG, String.format("mStopedLeCallBack, name %s, address %s",
+                    aBluetoothDevice.getName(),
+                    aBluetoothDevice.getAddress()));
         }
     };
 
     private final BluetoothAdapter.LeScanCallback mStartedLeCallBack = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice aBluetoothDevice, int i, byte[] bytes) {
-            String address = aBluetoothDevice.getName();
-            Log.d(TAG, String.format("mStartedLeCallBack, address %s", address));
-            if (address.contains("Band")) {
+            String name = aBluetoothDevice.getName();
+            Log.d(TAG, String.format("mStartedLeCallBack, name %s", name));
+            if (name != null && name.contains("Band")) {
                 mBluetoothAdapter.stopLeScan(null);
                 onDeviceFound(aBluetoothDevice);
             }
